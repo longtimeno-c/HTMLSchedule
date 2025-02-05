@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rolling Schedule</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #000;
+      color: #00ff00;
+      margin: 0;
+      padding: 0;
+    }
+
+    h1 {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .schedule-container {
+      display: flex;
+      flex-direction: column;
+      margin: 20px auto;
+      max-width: 1000px;
+      padding: 10px;
+      background-color: #222;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+    }
+
+    .day-tab {
+      margin: 15px 0;
+      padding: 20px;
+      background-color: #333;
+      border-radius: 10px;
+      border: 1px solid #00ff00;
+      transition: all 0.5s ease;
+    }
+
+    .day-tab.hidden {
+      opacity: 0;
+      transform: translateX(100%);
+    }
+
+    .day-title {
+      font-size: 1.8em;
+      font-weight: bold;
+      text-align: left;
+      margin-bottom: 15px;
+      color: #00ff00;
+    }
+
+    .event-row {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .event {
+      padding: 15px;
+      background-color: #444;
+      border-radius: 8px;
+      border: 1px solid #00ff00;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.5s ease;
+    }
+
+    .event.hidden {
+      opacity: 0;
+      transform: translateX(100%);
+    }
+
+    .event-time {
+      font-size: 1.2em;
+    }
+
+    .event-name {
+      font-size: 1.5em;
+      font-weight: bold;
+      flex: 1;
+      text-align: left;
+      margin-left: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>150-Hour Livestream Schedule</h1>
+<div id="schedule" class="schedule-container"></div>
+
+<script>
+  const startTime = new Date("June 19, 2025 18:00:00").getTime();
+
+  const schedule = [
+    {
+      day: "Day 1: 19th June",
+      events: [
+        { name: "Arrival", time: "10:00" },
+        { name: "Prep - Prestream", time: "14:00" },
+        { name: "Stream Start", time: "18:00" },
+        { name: "GMOD, Helldivers.", time: "20:00" },
+      ],
+    },
+    {
+      day: "Day 2: 20th June",
+      events: [
+        { name: "Breakfast", time: "08:00" },
+        { name: "Gym", time: "10:00" },
+        { name: "Lunch", time: "12:00" },
+        { name: "Bake off", time: "14:00" },
+        { name: "Lethal company + Smash bros Tournament", time: "18:00" },
+      ],
+    },
+    {
+      day: "Day 3: 21st June",
+      events: [
+        { name: "Breakfast", time: "08:00" },
+        { name: "GMOD", time: "9:00" },
+        { name: "Lunch", time: "12:00" },
+        { name: "Sons of the forest 2", time: "14:00" },
+        { name: "Phasmophobia, Midnight hide and seek", time: "20:00" },
+      ],
+    },
+    {
+      day: "Day 4: 22nd June",
+      events: [
+        { name: "Late Breakie", time: "10:00" },
+        { name: "Walk / much about", time: "11:00" },
+        { name: "Lunch", time: "13:00" },
+        { name: "Gym session", time: "14:00" },
+        { name: "Kareoke", time: "20:00" },
+      ],
+    },
+    {
+      day: "Day 5: 23rd June",
+      events: [
+        { name: "Breakfast", time: "08:00" },
+        { name: "Minecraft", time: "08:00" },
+        { name: "Lunch", time: "12:00" },
+        { name: "Amoung us", time: "14:00" },
+        { name: "Sea of Theives Stack", time: "20:00" },
+      ],
+    },
+    {
+      day: "Day 6: 24th June",
+      events: [
+        { name: "Gym session", time: "10:00" },
+        { name: "Much Bang", time: "14:00" },
+        { name: "Trivia Night", time: "20:00" },
+      ],
+    },
+    {
+      day: "Day 7: 25th June",
+      events: [
+        { name: "Late Breakie", time: "10:00" },
+        { name: "Lunch", time: "12:00" },
+        { name: "Mario Cart", time: "14:00" },
+        { name: "Dinner", time: "20:00" },
+        { name: "All-nighter - Q&A, chill, chat, midnight fireworks", time: "22:00" },
+        { name: "Stream End", time: "23:59" }
+      ],
+    },
+  ];
+
+  // Function to calculate T+
+  const calculateTPlus = (eventTime) => {
+    const elapsed = eventTime - startTime;
+    const hours = Math.floor(elapsed / (1000 * 60 * 60)).toString().padStart(3, "0");
+    const minutes = Math.floor((elapsed % (1000 * 60 * 60)) / (1000 * 60))
+      .toString()
+      .padStart(2, "0");
+    const seconds = Math.floor((elapsed % (1000 * 60)) / 1000)
+      .toString()
+      .padStart(2, "0");
+    return `${hours}:${minutes}:${seconds}`;
+  };
+
+  // Function to render schedule
+  const renderSchedule = () => {
+    const scheduleContainer = document.getElementById("schedule");
+    scheduleContainer.innerHTML = "";
+
+    const now = new Date().getTime();
+
+    schedule.forEach((day, dayIndex) => {
+      // Filter out past events
+      day.events = day.events.filter((event) => {
+        const eventDateParts = day.day.split(": ")[1].split(" ");
+        const dayOfMonth = parseInt(eventDateParts[0], 10);
+        const monthName = eventDateParts[1];
+        const eventTime = new Date(`${monthName} ${dayOfMonth}, 2025 ${event.time}`).getTime();
+        return eventTime >= now;
+      });
+
+      // Skip if all events for the day are expired
+      if (day.events.length === 0) return;
+
+      const dayTab = document.createElement("div");
+      dayTab.className = "day-tab";
+
+      // Day Title
+      const dayTitle = document.createElement("div");
+      dayTitle.className = "day-title";
+      dayTitle.textContent = day.day;
+      dayTab.appendChild(dayTitle);
+
+      // Event Row
+      const eventRow = document.createElement("div");
+      eventRow.className = "event-row";
+
+      day.events.forEach((event) => {
+        const eventDiv = document.createElement("div");
+        eventDiv.className = "event";
+
+        const eventDateParts = day.day.split(": ")[1].split(" ");
+        const dayOfMonth = parseInt(eventDateParts[0], 10);
+        const monthName = eventDateParts[1];
+        const eventTime = new Date(`${monthName} ${dayOfMonth}, 2025 ${event.time}`).getTime();
+
+        // Check if the event is active
+        if (eventTime <= now) {
+          eventDiv.style.backgroundColor = "gold";
+          eventDiv.style.color = "black";
+          eventDiv.style.fontWeight = "bold";
+        }
+
+        // Calculate T+ for the event
+        const tPlus = calculateTPlus(eventTime);
+
+        eventDiv.innerHTML = `
+          <span class="event-time">${event.time}</span>
+          <span class="event-name">${event.name}</span>
+          <span class="event-tplus">T+ ${tPlus}</span>
+        `;
+        eventRow.appendChild(eventDiv);
+      });
+
+      dayTab.appendChild(eventRow);
+      scheduleContainer.appendChild(dayTab);
+    });
+  };
+
+  // Function to auto-update the schedule every second
+  setInterval(() => {
+    renderSchedule();
+  }, 1000);
+
+  // Initial render
+  renderSchedule();
+</script>
+
+</body>
+</html>
